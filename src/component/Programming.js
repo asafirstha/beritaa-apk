@@ -3,36 +3,60 @@ import axios from "axios";
 
 const Home = ({ history }) => {
   const [news, setNews] = useState([]);
+  const [savedNews, setSavedNews] = useState([]);
 
   useEffect(() => {
     // Ambil berita dari API
-    axios.get("https://newsapi.org/v2/top-headlines?country=id&apiKey=920ab4ea830f43589e17261d606a4677")
+    axios.get("https://newsapi.org/v2/everything?q=programming&apiKey=920ab4ea830f43589e17261d606a4677")
       .then((response) => {
         setNews(response.data.articles);
       })
       .catch((error) => {
         console.error(error);
       });
+
+    // Load saved news from localStorage
+    const savedNewsData = localStorage.getItem("savedNews");
+    if (savedNewsData) {
+      setSavedNews(JSON.parse(savedNewsData));
+    }
   }, []);
 
-  // Fungsi untuk menampilkan halaman detail berita
-  const goToDetail = (id) => {
-    history.push(`/news/${id}`);
+  const saveNews = (article) => {
+    // Check if the article is already saved
+    if (!savedNews.find((savedArticle) => savedArticle.title === article.title)) {
+      const updatedSavedNews = [...savedNews, article];
+      localStorage.setItem("savedNews", JSON.stringify(updatedSavedNews));
+      setSavedNews(updatedSavedNews);
+    }
   };
 
+  const unSaveNews = (article) => {
+    const updatedSavedNews = savedNews.filter((savedArticle) => savedArticle.title !== article.title);
+    localStorage.setItem("savedNews", JSON.stringify(updatedSavedNews));
+    setSavedNews(updatedSavedNews);
+  };
   return (
-    <div>
-      <h2>Berita Indonesia</h2>
-      <ul>
-        {news.map((article) => (
-          <li key={article.id}>
-            <button onClick={() => goToDetail(article.id)}>{article.title}</button> 
-            <button>Save</button>
-          </li>
-        ))}
-      </ul>
+    <div className="centered-content">
+    <h1>News</h1>
+    <div className="news-container">
+      {news.map((article, index) => (
+        <div className="news-item" key={index}>
+          <p>{article.source.name}</p>
+          <h2>{article.title}</h2>
+          <p>{article.author}</p>
+          <p>{article.description}</p>
+          <a href={article.url} target="_blank" rel="noopener noreferrer">
+            <span className="button-box">News Page</span>
+          </a>
+          <button className="button" onClick={() => saveNews(article)}>
+            Save
+          </button>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 };
 
 export default Home;
